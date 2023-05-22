@@ -85,11 +85,11 @@ export default function NewMemory() {
       <View className="mt-4 flex-row items-center justify-between">
         <NLWLogo />
 
-        <TouchableOpacity className="h-10 w-10 items-center justify-center rounded-full bg-purple-500">
-          <Link href="/memories">
+        <Link href="/memories" asChild>
+          <TouchableOpacity className="h-10 w-10 items-center justify-center rounded-full bg-purple-500">
             <Icon name="arrow-left" size={16} color="#FFF" />
-          </Link>
-        </TouchableOpacity>
+          </TouchableOpacity>
+        </Link>
       </View>
       <View className="mt-6 space-y-6">
         <View className="flex-row items-center gap-2">
@@ -113,6 +113,7 @@ export default function NewMemory() {
             <Image
               source={{ uri: preview }}
               className="h-full w-full rounded-lg object-cover"
+              alt=""
             />
           ) : (
             <View className="flex-row items-center gap-2">
