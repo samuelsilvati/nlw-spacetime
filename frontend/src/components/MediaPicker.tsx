@@ -1,7 +1,11 @@
 'use client' // Permite o código abaixo ser executado diretamente no navegador
 import { ChangeEvent, useState } from 'react'
 
-export function MediaPicker() {
+interface MediaPickerProps {
+  onPreviewChange: (preview: string | null) => void
+}
+
+export function MediaPicker({ onPreviewChange }: MediaPickerProps) {
   const [preview, setPreview] = useState<string | null>(null)
   function onFileSelected(event: ChangeEvent<HTMLInputElement>) {
     const { files } = event.target
@@ -13,6 +17,7 @@ export function MediaPicker() {
     const previewURL = URL.createObjectURL(files[0])
 
     setPreview(previewURL)
+    onPreviewChange(previewURL) // Chama a função de retorno de chamada com o novo valor de preview
   }
 
   return (

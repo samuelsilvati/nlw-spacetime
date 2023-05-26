@@ -71,7 +71,7 @@ export function NewMemoryForm() {
           Tornar memória pública
         </label>
       </div>
-      <MediaPicker />
+      <MediaPicker onPreviewChange={() => {}} />
       <textarea
         name="content"
         spellCheck={false}
