@@ -6,6 +6,8 @@ import { api } from '@/lib/api'
 import { Camera, Trash2 } from 'lucide-react'
 import { FormEvent, useEffect, useState } from 'react'
 import Cookie from 'js-cookie'
+import { useRouter } from 'next/navigation'
+import Loading from './Loading'
 
 interface MemoryProps {
   id: string
@@ -15,18 +17,40 @@ interface MemoryDataProps {
   id: string
   coverUrl: string
   content: string
-  name: string
 }
 
 export function ViewMemoryForm(id: MemoryProps) {
+  const router = useRouter()
   const [memoryData, setMemoryData] = useState<MemoryDataProps | null>(null)
+  const [loading, setLoading] = useState(true)
+  const [show, setShow] = useState(false)
+  const [isPress, setIsPress] = useState(false)
   const [selectedPreview, setSelectedPreview] = useState<string | null>(null)
 
   const handlePreviewChange = (previewValue: string | null) => {
     setSelectedPreview(previewValue)
   }
 
+  const token = Cookie.get('token')
+
+  async function handleDeleteMemory() {
+    try {
+      setLoading(true)
+      await api.delete(`/memories/${id.id}`, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      })
+      setLoading(false)
+      router.push('/')
+    } catch (err) {
+      setLoading(false)
+      console.log(err)
+    }
+  }
+
   async function handleEditMemory(event: FormEvent<HTMLFormElement>) {
+    setLoading(true)
     event.preventDefault()
 
     const formData = new FormData(event.currentTarget)
@@ -46,8 +70,6 @@ export function ViewMemoryForm(id: MemoryProps) {
       coverUrl = `${memoryData?.coverUrl}`
     }
 
-    const token = Cookie.get('token')
-
     await api.put(
       `/memories/${id.id}`,
       {
@@ -61,13 +83,14 @@ export function ViewMemoryForm(id: MemoryProps) {
         },
       },
     )
+    setLoading(false)
+    setIsPress(false)
   }
 
   useEffect(() => {
     const fetchData = async () => {
       try {
         const token = Cookie.get('token')
-
         const response = await api.get(`/memories/${id.id}`, {
           headers: {
             Authorization: `Bearer ${token}`,
@@ -77,7 +100,9 @@ export function ViewMemoryForm(id: MemoryProps) {
         if (response.data) {
           setMemoryData(response.data)
         }
+        setLoading(false)
       } catch (error) {
+        setLoading(false)
         console.error('Error fetching data:', error)
       }
     }
@@ -86,10 +111,44 @@ export function ViewMemoryForm(id: MemoryProps) {
     }
   }, [id, id.id])
 
+  if (loading) return <Loading isLoading={loading} />
+
   return (
     <form onSubmit={handleEditMemory} className="flex flex-1 flex-col gap-2">
+      <Loading isLoading={false} />
+
+      {show ? (
+        <div className="absolute bottom-0 left-0 flex h-full w-full items-center justify-center  bg-black/20 backdrop-blur-sm transition-opacity">
+          <div className="flex h-40 w-80 flex-col justify-between rounded border border-gray-400 bg-gray-800 p-5">
+            <p className="pt-5 text-center">
+              Tem certeza que deseja excluir essa memória?
+            </p>
+            <div className="flex w-full items-center justify-center gap-7">
+              <button
+                type="button"
+                className="inline-block self-end rounded-full bg-green-500 px-5 py-3 font-alt text-sm uppercase leading-none text-black hover:bg-green-600"
+                onClick={() => {
+                  setShow(false)
+                }}
+              >
+                Voltar
+              </button>
+              <button
+                type="button"
+                className="inline-block self-end rounded-full bg-orange-500 px-5 py-3 font-alt text-sm uppercase leading-none text-black hover:bg-orange-600"
+                onClick={handleDeleteMemory}
+              >
+                Excluir
+              </button>
+            </div>
+          </div>
+        </div>
+      ) : (
+        ''
+      )}
+
       <div className="flex flex-row justify-between">
-        <div className="flex items-center gap-4">
+        <div className="flex flex-col items-start gap-4 xl:flex-row xl:items-center">
           <label
             htmlFor="media"
             className="flex cursor-pointer items-center gap-1.5 text-sm text-gray-200 hover:text-gray-100"
@@ -112,19 +171,25 @@ export function ViewMemoryForm(id: MemoryProps) {
           </label>
         </div>
         <div>
-          <button
-            type="submit"
-            className="inline-block self-end rounded-full bg-orange-500 p-3 font-alt text-sm uppercase leading-none text-black hover:bg-orange-600"
-          >
-            <Trash2 size={20} />
-          </button>
+          {!isPress ? (
+            <button
+              className="text-gray-200 hover:text-gray-100 hover:underline"
+              onClick={() => {
+                setIsPress(true)
+              }}
+            >
+              Editar memória
+            </button>
+          ) : (
+            ''
+          )}
         </div>
       </div>
 
       <MediaPicker onPreviewChange={handlePreviewChange} />
 
       {selectedPreview ? (
-        ''
+        <div />
       ) : (
         <img
           src={memoryData?.coverUrl}
@@ -149,12 +214,27 @@ export function ViewMemoryForm(id: MemoryProps) {
         }
       />
 
-      <button
-        type="submit"
-        className="inline-block self-end rounded-full bg-green-500 px-5 py-3 font-alt text-sm uppercase leading-none text-black hover:bg-green-600"
-      >
-        Salvar
-      </button>
+      {isPress ? (
+        <div className="m-0 flex w-full items-center justify-end gap-4">
+          <button
+            type="button"
+            className="inline-block self-end rounded-full bg-orange-500 p-3 text-black hover:bg-orange-600"
+            onClick={() => {
+              setShow(true)
+            }}
+          >
+            <Trash2 size={18} />
+          </button>
+          <button
+            type="submit"
+            className="inline-block self-end rounded-full bg-green-500 px-5 py-3 font-alt text-sm uppercase leading-none text-black hover:bg-green-600"
+          >
+            Salvar
+          </button>
+        </div>
+      ) : (
+        ''
+      )}
     </form>
   )
 }
