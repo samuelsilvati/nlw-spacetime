@@ -57,8 +57,8 @@ export function NewMemoryForm() {
         },
       },
     )
-    setLoading(false)
     router.push('/')
+    setLoading(false)
   }
 
   if (loading) return <Loading isLoading={loading} />
