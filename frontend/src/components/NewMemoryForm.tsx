@@ -2,30 +2,44 @@
 
 import { MediaPicker } from '@/components/MediaPicker'
 import { api } from '@/lib/api'
+// import axios from 'axios'
 import { Camera } from 'lucide-react'
-import { FormEvent } from 'react'
+import { FormEvent, useState } from 'react'
 import Cookie from 'js-cookie'
 import { useRouter } from 'next/navigation'
+import Loading from './Loading'
 
 export function NewMemoryForm() {
   const router = useRouter()
+  const [loading, setLoading] = useState(false)
 
   async function handleCreateMemory(event: FormEvent<HTMLFormElement>) {
     event.preventDefault()
-
+    setLoading(true)
     const formData = new FormData(event.currentTarget)
 
     const fileToUpload = formData.get('coverUrl')
 
     let coverUrl = ''
 
-    if (fileToUpload) {
+    if (fileToUpload instanceof File && fileToUpload.name !== '') {
       const uploadFormData = new FormData()
       uploadFormData.set('file', fileToUpload)
 
-      const uploadResponse = await api.post('/upload', uploadFormData)
+      uploadFormData.set('fileName', fileToUpload.name)
+      uploadFormData.set('folder', 'nlw-spacetime')
 
-      coverUrl = uploadResponse.data.fileUrl
+      const uploadResponse = await api.post(
+        `${process.env.NEXT_PUBLIC_IMAGEKIT_UPLOAD_URL}`,
+        uploadFormData,
+        {
+          headers: {
+            Authorization: `Basic ${process.env.NEXT_PUBLIC_IMAGEKIT_PRIVATE_KEY}`,
+          },
+        },
+      )
+
+      coverUrl = uploadResponse.data.url
     }
 
     const token = Cookie.get('token')
@@ -43,12 +57,18 @@ export function NewMemoryForm() {
         },
       },
     )
-
+    setLoading(false)
     router.push('/')
   }
 
+  if (loading) return <Loading isLoading={loading} />
+
   return (
-    <form onSubmit={handleCreateMemory} className="flex flex-1 flex-col gap-2">
+    <form
+      onSubmit={handleCreateMemory}
+      className="flex h-screen flex-1 flex-col gap-2"
+    >
+      <Loading isLoading={false} />
       <div className="flex items-center gap-4">
         <label
           htmlFor="media"
