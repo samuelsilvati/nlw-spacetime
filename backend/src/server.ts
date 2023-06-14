@@ -8,7 +8,9 @@ import { authRoutes } from './routes/auth'
 import { uploadRoutes } from './routes/upload'
 
 export function init() {
-  const app = fastify()
+  const app = fastify({
+    logger: false,
+  })
 
   app.register(multipart)
 
@@ -23,6 +25,8 @@ export function init() {
   app.register(authRoutes)
   app.register(memoriesRoutes)
   app.register(uploadRoutes)
+
+  return app
 }
 
 if (require.main === module) {
