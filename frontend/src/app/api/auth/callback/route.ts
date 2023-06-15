@@ -13,7 +13,7 @@ export async function GET(request: NextRequest) {
 
   const rediretURL = redirectTo ?? new URL('/', request.url)
 
-  const cookieExpiresInSeconds = 60 * 60 * 24 * 30
+  const cookieExpiresInSeconds = 600
 
   return NextResponse.redirect(rediretURL, {
     headers: {
